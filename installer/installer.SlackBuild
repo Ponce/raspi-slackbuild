@@ -30,7 +30,7 @@
 #     armedslack-current tree (it's in armedslack-current/isolinux)
 #   * A recently built kernel tree with 'Image' and modules in
 #     '../kernel_raspi/linux'
-#   * The firmware git repo in '../raspi-boot/firmware'
+#   * The firmware folder in '../raspi-boot/firmware'
 #   * 'Extra' packages already built in $OUTPUT
 #
 #------------------------------------------------------------------------------
@@ -130,10 +130,10 @@ mkfs -t ext4 -O ^has_journal -E stride=2,stripe-width=1024 -b 4096 /dev/md/raspi
 # Save the empty SD card image as a useful by-product.
 # (Very time consuming, so only do this if needed.)
 EMPTY=raspi-empty-sdcard.img
-if [ ! -f $OUTPUT/$EMPTY.xz ]; then
-  echo "Compressing image to $OUTPUT/$EMPTY.xz"
-  xz -v < $MYTMP/$IMAGE > $OUTPUT/$EMPTY.xz
-  sha1sum $OUTPUT/$EMPTY.xz > $OUTPUT/$EMPTY.xz.sha1
+if [ ! -f $OUTPUT/$EMPTY.gz ]; then
+  echo "Compressing image to $OUTPUT/$EMPTY.gz"
+  gzip -c $MYTMP/$IMAGE     > $OUTPUT/$EMPTY.gz
+  sha1sum $OUTPUT/$EMPTY.gz > $OUTPUT/$EMPTY.gz.sha1
 fi
 
 #------------------------------------------------------------------------------
@@ -145,13 +145,15 @@ mount -t vfat /dev/md/raspimg1 $MYTMP/mnt
 # Get the boot firmware and default config
 cd $CWD/../raspi-boot/firmware
 cp -v \
-  boot/bootcode.bin boot/loader.bin \
+  boot/bootcode.bin \
   boot/LICENCE.broadcom \
   $MYTMP/mnt
 cp -v \
-  boot/arm224_start.elf \
+  boot/start.elf \
   $MYTMP/mnt/start.elf
-cat $CWD/../raspi-boot/config.txt.new > $MYTMP/mnt/config.txt
+# Use 32 Mb of the memory for the graphics,
+# so we have the rest for the installer
+sed "s|@GPUMEM@|32|" $CWD/../raspi-boot/config.txt.new > $MYTMP/mnt/config.txt
 
 # Kernel
 cp -v \
@@ -181,9 +183,9 @@ echo ""                                    >> $MYTMP/mnt/README
 cat $MYTMP/initrd-tree/.installer-version  >> $MYTMP/mnt/README
 echo "Raspberry Pi:"                       >> $MYTMP/mnt/README
 echo "-------------"                       >> $MYTMP/mnt/README
-KREV="$(cd $CWD/../kernel_raspi/linux; git log --format='%h' -n 1)"
+KREV=$(echo $CWD/../kernel_raspi/raspberrypi-linux-*.tar.gz | sed -e "s|.*raspberrypi-linux-||" -e "s|\.tar\.gz||")
 echo "Kernel git rev.......: $KREV"        >> $MYTMP/mnt/README
-BREV="$(cd $CWD/../raspi-boot/firmware; git log --format='%h' -n 1)"
+BREV=$(echo $CWD/../raspi-boot/raspberrypi-firmware-*.tar.gz | sed -e "s|.*raspberrypi-firmware-||" -e "s|\.tar\.gz||")
 echo "Boot fw git rev......: $BREV"        >> $MYTMP/mnt/README
 echo "Build host...........: $(uname -a)"  >> $MYTMP/mnt/README
 echo "Build date...........: $(date)"      >> $MYTMP/mnt/README
@@ -195,9 +197,9 @@ umount -v $MYTMP/mnt
 mdadm --stop /dev/md/raspimg
 losetup -d $LOOPDEV
 
-echo "Compressing image to $OUTPUT/$IMAGE.xz"
-xz -v < $MYTMP/$IMAGE     > $OUTPUT/$IMAGE.xz
-sha1sum $OUTPUT/$IMAGE.xz > $OUTPUT/$IMAGE.xz.sha1
+echo "Compressing image to $OUTPUT/$IMAGE.gz"
+gzip -c $MYTMP/$IMAGE     > $OUTPUT/$IMAGE.gz
+sha1sum $OUTPUT/$IMAGE.gz > $OUTPUT/$IMAGE.gz.sha1
 
 rm $MYTMP/$IMAGE
 

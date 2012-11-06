@@ -1,16 +1,19 @@
 Kernel, boot firmware, devices and hacks for Raspberry Pi
 
 This script will run the following SlackBuilds:
-  raspi-boot
-  raspi-devs
-  raspi-hacks
-  kernel_raspi
-  kernel-modules-raspi
-  installer
+   raspi-boot
+   raspi-hacks
+   kernel_raspi
+   kernel-modules-raspi
+   installer (if DOINSTALLER=yes)
+   kernel-source-raspi (if DOSOURCE=yes)
 
-Before running this script, you must set up the following git repos:
+Before running this script, you must download some files:
+to take care of this run
+  sh ./get_needed_files.sh
 
-  git clone git://github.com/raspberrypi/linux.git \
-            kernel_raspi/linux
-  git clone git://github.com/raspberrypi/firmware.git \
-            raspi-boot/firmware
+- - -
+
+This is a fork of https://github.com/idlemoor/raspi-slackbuild
+
+updated for the latest supported kernel, 3.2.27 bfq patches added.

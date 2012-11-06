@@ -1,5 +1,5 @@
 This is the Slackware ARM Installer, modified to boot on the Raspberry Pi. 
-The image allows you to install either Slackware ARM 13.37 or Slackware ARM
+The image allows you to install either Slackware ARM 14.0 or Slackware ARM
 Current from the network or from a USB storage device plugged into your Pi.
 
 Please follow these steps to perform your Slackware installation.
@@ -7,7 +7,7 @@ Please follow these steps to perform your Slackware installation.
 
 1. On a host system with an SD card writer, copy the image to an SD card:
 
-  xz -dc raspi-slack-installer_16Jul12.img.xz | dd of=[device] bs=65536
+  gzip -dc raspi-slack-installer_16Jul12.img.gz | dd of=[device] bs=65536
 
 where [device] is the name of the SD card writer, for example /dev/sdb.
 You will need at least a 2Gb card.  A full installation will need an 8Gb
