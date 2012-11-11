@@ -149,20 +149,19 @@ cp -v \
   boot/LICENCE.broadcom \
   $MYTMP/mnt
 cp -v \
-  boot/start.elf \
-  $MYTMP/mnt/start.elf
-# Use 32 Mb of the memory for the graphics,
+  boot/start*.elf \
+  boot/fixup*.dat \
+  $MYTMP/mnt/
+# Use 16 Mb of the memory for the graphics,
 # so we have the rest for the installer
-sed "s|@GPUMEM@|32|" $CWD/../raspi-boot/config.txt.new > $MYTMP/mnt/config.txt
+sed "s|@GPUMEM@|16|" $CWD/../raspi-boot/config.txt.new > $MYTMP/mnt/config.txt
 
 # Kernel
 cp -v \
   $CWD/../kernel_raspi/linux/arch/arm/boot/zImage \
   $MYTMP/mnt/kernel.img
-# Take kernel command line from kernel config. 'root=' doesn't matter.
-grep 'CONFIG_CMDLINE=' $CWD/../kernel_raspi/linux/.config | \
-  sed -e 's/CONFIG_CMDLINE="//' -e 's/"$//' \
-  > $MYTMP/mnt/cmdline.txt
+# Pass a simplified command line
+echo "dwc_otg.lpm_enable=0 console=tty1" > $MYTMP/mnt/cmdline.txt
 
 # Get install.gz
 cp -v \
@@ -172,8 +171,7 @@ cp -v \
 # Add initrd stuff for install.gz to /boot/config.txt and /boot/cmdline.txt
 LOADADDR="0xa00000"
 SIZE="0x$(printf '%x' $(stat --format='%s' $MYTMP/mnt/install.gz))"
-echo "ramfsfile=install.gz" >> $MYTMP/mnt/config.txt
-echo "ramfsaddr=$LOADADDR"  >> $MYTMP/mnt/config.txt
+echo "initramfs install.gz $LOADADDR" >> $MYTMP/mnt/config.txt
 sed -i -e "s/\$/ initrd=$LOADADDR,$SIZE/" $MYTMP/mnt/cmdline.txt
 
 # Assemble the README

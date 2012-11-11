@@ -60,26 +60,24 @@ tar xf raspberrypi-firmware-$GITREV.tar.gz
 mv raspberrypi-firmware-$GITREV firmware
 
 cd $CWD/firmware/boot
-chown root:root *
+chown -R root:root * ../opt ../documentation
 chmod 644 *
 
 mkdir -p $PKG/boot
 cp -a \
-  bootcode.bin fixup*dat start*elf LICENCE.broadcom COPYING.linux \
+  bootcode.bin fixup*.dat start*.elf LICENCE.broadcom COPYING.linux \
   $PKG/boot
 zcat $CWD/README.initrd.gz > $PKG/boot/README.initrd
 zcat $CWD/README.boot.gz   > $PKG/boot/README
 
-# Don't overwrite start.elf
-mv $PKG/boot/start.elf $PKG/boot/start.elf.new
-
-# The memory allocation for the OS and GPU is set here (or by an env variable).
-# GPUMEM must be set to 32 or 64 or 128 (you can even set it to 16, see
-# config.txt.new).
-# The operating system will get the rest of memory, i.e. (256-$GPUMEM) Mb.
-# We use the 32Mb version by default (upstream has 64Mb by default, but this
+# The default memory allocation for the OS and GPU is set here
+# (or by pasing it as an environment variable).
+# GPUMEM preferred values are 16 or 64 or 128.
+# The operating system will get the rest of memory, i.e. 256-$GPUMEM Mb.
+# We use the 16Mb version by default (upstream has 64Mb by default, but this
 # seems pointless until accelerated video works).
-GPUMEM=${GPUMEM:-32}
+# You can also edit this later in /boot/config.txt.
+GPUMEM=${GPUMEM:-16}
 
 # There is now a documented 'safe mode', so we'll include upstream's prebuilt
 # 'emergency kernel' with its built-in busybox.
@@ -126,10 +124,11 @@ cp \
 #cd raspberrypi-userland-$GITREV/build/arm-linux/release
 #
 ## The build try to crosscompile for hardfloat by default, but we don't need it
-#sed -i -e "s|arm-linux-gnueabihf-||" -e "s|\ -mfpu=vfp\ -mfloat-abi=hard||" \
-#  ../../../makefiles/cmake/toolchains/arm-linux-gnueabihf.cmake
+#sed -e "s|arm-linux-gnueabihf-||" -e "s|\ -mfpu=vfp\ -mfloat-abi=hard||" \
+#  ../../../makefiles/cmake/toolchains/arm-linux-gnueabihf.cmake \
+#  > ../../../makefiles/cmake/toolchains/arm-linux-gnueabi.cmake
 #
-#cmake -DCMAKE_TOOLCHAIN_FILE=../../../makefiles/cmake/toolchains/arm-linux-gnueabihf.cmake \
+#cmake -DCMAKE_TOOLCHAIN_FILE=../../../makefiles/cmake/toolchains/arm-linux-gnueabi.cmake \
 #  -DCMAKE_INSTALL_PREFIX=/opt/vc -DCMAKE_BUILD_TYPE=Release ../../..
 #make
 #make install DESTDIR=$PKG

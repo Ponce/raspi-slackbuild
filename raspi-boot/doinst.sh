@@ -15,7 +15,6 @@ config() {
 }
 
 config boot/config.txt.new
-config boot/start.elf.new
 
 # This is a sneaky opportunity to remove the installer's initrd
 rm -f boot/install.gz
