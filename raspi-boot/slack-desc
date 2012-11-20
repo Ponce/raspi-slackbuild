@@ -6,14 +6,14 @@
 # customary to leave one space after the ':' except on otherwise blank lines.
 
           |-----handy-ruler------------------------------------------------------|
-raspi-boot: raspi-boot (Raspberry Pi boot firmware)
+raspi-boot: raspi-boot (Raspberry Pi firmware)
 raspi-boot:
 raspi-boot: Closed source boot firmware blobs for the Raspberry Pi. You need these
 raspi-boot: blobs to be able to boot the Pi.
+raspi-boot: This package include the userland libraries to interact with the
+raspi-boot: proprietary hardware of the device.
 raspi-boot:
 raspi-boot: https://github.com/raspberrypi/firmware
-raspi-boot:
-raspi-boot:
 raspi-boot:
 raspi-boot:
 raspi-boot:
