@@ -75,9 +75,9 @@ fi
 
 cat $CWD/$CONFIG > .config
 
-# Add bfq patches
-patch -p1 < $CWD/0001-block-cgroups-kconfig-build-bits-for-BFQ-v5-3.6.patch
-patch -p1 < $CWD/0002-block-introduce-the-BFQ-v5-I-O-sched-for-3.6.patch
+# Add the bfq patches
+patch -p1 < $CWD/0001-block-cgroups-kconfig-build-bits-for-BFQ-v5r1-3.6.patch
+patch -p1 < $CWD/0002-block-introduce-the-BFQ-v5r1-I-O-sched-for-3.6.patch
 
 make silentoldconfig LOCALVERSION="-$MYVER"
 

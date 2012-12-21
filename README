@@ -16,5 +16,5 @@ to take care of this run
 
 This is a fork of https://github.com/idlemoor/raspi-slackbuild
 
-updated for the latest upstream development kernel, 3.6.9,
+updated for the latest upstream development kernel, 3.6.11,
 with BFQ patches added.
