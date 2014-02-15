@@ -1,8 +1,8 @@
 Kernel SlackBuild for Raspberry Pi
 
-(Note that this SlackBuild will also run kernel-modules-raspi.SlackBuild.)
+Before running this SlackBuild you must get a tarball of the kernel
+source from the 3.6.y branch of the raspberrypi's repository: a
+script is here to help that (if you haven't already run it through
+the get_needed_files.sh in the main folder)
 
-Before you run this SlackBuild you must clone the Raspberry Pi 'linux' git
-repository into a subdirectory named linux:
-
-  git clone git://github.com/raspberrypi/linux.git
+  sh get_kernel_source.sh

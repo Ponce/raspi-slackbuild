@@ -3,5 +3,5 @@ To run this script you will need:
     armedslack-current tree (it's in armedslack-current/isolinux)
   * A recently built kernel tree with 'Image' and modules in
     '../kernel_raspi/linux'
-  * The firmware git repo in '../raspi-boot/firmware'
+  * The firmware folder in '../raspi-boot/firmware'
   * 'Extra' packages already built in $OUTPUT

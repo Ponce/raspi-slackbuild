@@ -1,0 +1,9 @@
+# For information about this file, see http://elinux.org/RPi_config.txt
+#
+# gpu_mem=32 means that 32 Mb of the raspberrypi's RAM will be used for
+# the GPU, leaving 224 Mb for the operating system (if the raspberrypi
+# got a total of 256Mb RAM). You can change this default as needed,
+# should handle 256M and 512M parts.
+# The start_cd.elf and fixup_cd.dat will be used when gpu_mem=16
+gpu_mem=@GPUMEM@
+disable_overscan=1

@@ -25,10 +25,11 @@
 
 #------------------------------------------------------------------------------
 #
-# Before you run this SlackBuild you must clone the Raspberry Pi 'linux' git
-# repository into a subdirectory named linux:
+# Before running this SlackBuild you must get a tarball of the kernel
+# source from the 3.6.y branch of the raspberrypi's repository: a script
+# is here to help that
 #
-#   git clone git://github.com/raspberrypi/linux.git
+#  sh get_kernel_source.sh
 #
 #------------------------------------------------------------------------------
 
@@ -38,7 +39,7 @@ PRGNAM=kernel_$FLAVOUR
 # If not set in the environment, MYVER will be set from today's date
 MYVER=${VERSION:-$(date '+%Y%m%d')}
 BUILD=${BUILD:-1}
-TAG=${TAG:-}
+TAG=${TAG:-_dbs}
 
 KNLARCH=${ARCH:-arm}
 unset ARCH
@@ -55,8 +56,18 @@ set -e
 rm -rf $PKG
 mkdir -p $PKG
 
+GITREV=${GITREV:-$(echo raspberrypi-linux-*.tar.gz | sed -e "s|raspberrypi-linux-||" -e "s|\.tar\.gz||")}
+
+rm -fr linux
+echo "Uncompressing the kernel silently to avoid spamming the console too much."
+echo "It can take a while..."
+echo "tar xf $CWD/raspberrypi-linux-$GITREV.tar.gz"
+tar xf $CWD/raspberrypi-linux-$GITREV.tar.gz
+mv raspberrypi-linux-$GITREV linux
+# Uncompress also aufs3 sources
+tar xf $CWD/aufs3-3.10.tar.gz
+
 cd $CWD/linux
-make mrproper
 
 if [ -d $CWD/patches/ ]; then
   git checkout -f
@@ -67,7 +78,19 @@ fi
 
 cat $CWD/$CONFIG > .config
 
-GITREV=$(git log --format='%h' -n 1)
+# Add the bfq patches
+patch -p1 < $CWD/0001-block-cgroups-kconfig-build-bits-for-BFQ-v6r2-3.10.8.patch
+patch -p1 < $CWD/0002-block-introduce-the-BFQ-v6r2-I-O-sched-for-3.10.8.patch
+patch -p1 < $CWD/0003-block-bfq-add-Early-Queue-Merge-EQM-to-BFQ-v6r2-for-.patch
+
+# Add aufs3 stuff
+cp -a $CWD/aufs3-3.10/Documentation/ABI/testing/* Documentation/ABI/testing/
+cp -a $CWD/aufs3-3.10/Documentation/filesystems/aufs Documentation/filesystems/
+cp -a $CWD/aufs3-3.10/fs/aufs fs/
+cp -a $CWD/aufs3-3.10/include/uapi/linux/aufs_type.h include/uapi/linux/
+patch -p1 < $CWD/aufs3-3.10/aufs3-kbuild.patch
+patch -p1 < $CWD/aufs3-3.10/aufs3-base.patch
+patch -p1 < $CWD/aufs3-3.10/aufs3-mmap.patch
 
 make silentoldconfig LOCALVERSION="-$MYVER"
 

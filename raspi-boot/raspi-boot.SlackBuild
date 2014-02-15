@@ -25,10 +25,13 @@
 
 #------------------------------------------------------------------------------
 #
-# Before you run this SlackBuild you must clone the Raspberry Pi 'firmware' git
-# repository into a subdirectory named firmware:
+# Before you run this SlackBuild you must get a tarball of the firmware
+# from the raspberrypi's github repository:
+# a script is here to help that (if you haven't already run it through
+# the get_needed_files.sh in the main folder)
 #
-#   git clone git://github.com/raspberrypi/firmware.git
+#  sh get_firmware.sh
+#  sh get_userland.sh (not needed ATM)
 #
 #------------------------------------------------------------------------------
 
@@ -37,7 +40,7 @@ VERSION=${VERSION:-$(date '+%Y%m%d')}
 BUILD=${BUILD:-1}
 TAG=${TAG:-}
 
-ARCH=fw
+ARCH=arm
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -49,36 +52,32 @@ set -e
 rm -rf $PKG
 mkdir -p $PKG
 
+GITREV=${GITREV:-$(echo raspberrypi-firmware-*.tar.gz | sed -e "s|raspberrypi-firmware-||" -e "s|\.tar\.gz||")}
+echo "Uncompressing the firmware silently to avoid spamming the console too much."
+echo "It can take a while..."
+echo "tar xf raspberrypi-firmware-$GITREV.tar.gz"
+tar xf raspberrypi-firmware-$GITREV.tar.gz
+mv raspberrypi-firmware-$GITREV firmware
+
 cd $CWD/firmware/boot
-chown root:root *
+chown -R root:root * ../opt ../documentation
 chmod 644 *
 
 mkdir -p $PKG/boot
 cp -a \
-  bootcode.bin loader.bin LICENCE.broadcom \
+  bootcode.bin fixup*.dat start*.elf LICENCE.broadcom COPYING.linux \
   $PKG/boot
 zcat $CWD/README.initrd.gz > $PKG/boot/README.initrd
 zcat $CWD/README.boot.gz   > $PKG/boot/README
 
-# The default memory allocation for the OS and GPU is set here (or by an env variable).
-# LINUXMEM must be set to 240 or 224 or 192 or 128.
-# The GPU will get the rest of memory, i.e. (256-$LINUXMEM) Mb.
-# We use the 224Mb version by default (upstream has 192Mb by default, but this
+# The default memory allocation for the OS and GPU is set here
+# (or by pasing it as an environment variable).
+# GPUMEM preferred values are 16 or 64 or 128.
+# The operating system will get the rest of memory, i.e. 256-$GPUMEM Mb.
+# We use the 16Mb version by default (upstream has 64Mb by default, but this
 # seems pointless until accelerated video works).
-LINUXMEM=${LINUXMEM:-224}
-cp -a \
-  arm${LINUXMEM}_start.elf \
-  $PKG/boot/start.elf.new
-
-# But we'll deliver all the start.elf files (as is customary) so the user can
-# change this if required:
-cp -a \
-  arm*_start.elf \
-  $PKG/boot/
-
-# Record the arm*_start.elf md5sums so start.elf can be identified at the next upgrade
-mkdir -p $PKG/var/lib/$PRGNAM
-md5sum arm*_start.elf > $PKG/var/lib/$PRGNAM/startelf.md5.new
+# You can also edit this later in /boot/config.txt.
+GPUMEM=${GPUMEM:-16}
 
 # There is now a documented 'safe mode', so we'll include upstream's prebuilt
 # 'emergency kernel' with its built-in busybox.
@@ -88,24 +87,53 @@ cp -a \
   $PKG/boot/
 
 # Install config.txt as .new even though it's not in /etc
-cat < $CWD/config.txt.new > $PKG/boot/config.txt.new
+sed "s|@GPUMEM@|$GPUMEM|" $CWD/config.txt > $PKG/boot/config.txt.new
+
+# Install the proprietary parts in $PKG/opt
+cp -a ../opt $PKG/opt
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
 cp -a \
-  LICENCE.broadcom \
-  $PKG/usr/doc/$PRGNAM-$VERSION
+  LICENCE.broadcom COPYING.linux ../documentation/ilcomponents \
+  $PKG/usr/doc/$PRGNAM-$VERSION/
+mv $PKG/opt/vc/LICENCE $PKG/usr/doc/$PRGNAM-$VERSION/LICENCE.vc
 
 # Add version stamp into /boot and /usr/doc
 echo "Package: $PRGNAM-$VERSION-$ARCH-$BUILD$TAG" \
   >  $PKG/boot/version-$PRGNAM.txt
 echo "Build date: $(date -u '+%F %T')" \
   >> $PKG/boot/version-$PRGNAM.txt
-GITREV=$(git log --format='%h' -n 1)
 echo "Git revision: $GITREV" \
   >> $PKG/boot/version-$PRGNAM.txt
 cp \
   $PKG/boot/version-$PRGNAM.txt \
   $PKG/usr/doc/$PRGNAM-$VERSION/version.txt
+
+## Install the userland libs
+cd $CWD
+GITREV=$(echo raspberrypi-userland-*.tar.gz | sed -e "s|raspberrypi-userland-||" -e "s|\.tar\.gz||")
+mkdir -p $TMP/$PRGNAM
+cd $TMP/$PRGNAM
+tar xf $CWD/raspberrypi-userland-$GITREV.tar.gz
+chown -R root:root .
+find . \
+  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+  -exec chmod 755 {} \; -o \
+  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+  -exec chmod 644 {} \;
+mkdir -p raspberrypi-userland-$GITREV/build/arm-linux/release
+cd raspberrypi-userland-$GITREV/build/arm-linux/release
+
+# The build try to crosscompile for hardfloat by default, but we don't need it
+sed -e "s|arm-linux-gnueabihf-||" \
+  -e "s|\ -mfloat-abi=hard| -mthumb -march=armv6zk -mtune=arm1176jzf-s -mfloat-abi=softfp|" \
+  ../../../makefiles/cmake/toolchains/arm-linux-gnueabihf.cmake > \
+  ../../../makefiles/cmake/toolchains/armv6hl-slackware-linux-gnueabi.cmake
+
+cmake -DCMAKE_TOOLCHAIN_FILE=../../../makefiles/cmake/toolchains/armv6hl-slackware-linux-gnueabi.cmake \
+  -DCMAKE_INSTALL_PREFIX=/opt/vc -DCMAKE_BUILD_TYPE=Release ../../..
+make
+make install DESTDIR=$PKG
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc

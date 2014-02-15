@@ -14,6 +14,6 @@ kernel-source: This package contains the source to the Linux Kernel.  It was cre
 kernel-source: from a compilation of a working Kernel, therefore includes all changes
 kernel-source: that have been applied to the Kernels shipped by the Raspberry Pi
 kernel-source: Foundation (see https://github.com/raspberrypi/linux).
-kernel-source:
+kernel-source: This also uses BFQ and aufs3 patches.
 kernel-source: 
 kernel-source:

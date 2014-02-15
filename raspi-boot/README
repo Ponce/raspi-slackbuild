@@ -1,6 +1,10 @@
-Boot Firmware SlackBuild for Raspberry Pi
+Boot Firmware SlackBuild for Raspberry Pi 
+(includes build of the userland libraries)
 
-Before you run this SlackBuild you must clone the Raspberry Pi 'firmware' git
-repository into a subdirectory named firmware:
+Before you run this SlackBuild you must get a tarball of the firmware
+and the sources of the userland libraries from the raspberrypi's github
+repository: two scripts are here to help that (if you haven't already
+run them through the get_needed_files.sh in the main folder)
 
-  git clone git://github.com/raspberrypi/firmware.git
+  sh get_firmware.sh
+  sh get_userland.sh

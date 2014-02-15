@@ -33,17 +33,14 @@
 #   installer (if DOINSTALLER=yes)
 #   kernel-source-raspi (if DOSOURCE=yes)
 #
-# Before running this script, you must set up the following git repos:
-#
-#   git clone git://github.com/raspberrypi/linux.git \
-#             kernel_raspi/linux
-#   git clone git://github.com/raspberrypi/firmware.git \
-#             raspi-boot/firmware
+# Before running this script, you must download some files:
+# to take care of this run
+#   sh ./get_needed_files.sh
 #
 #------------------------------------------------------------------------------
 
 BUILD=${BUILD:-1}
-TAG=${TAG:-}
+TAG=${TAG:-_dbs}
 ARCH=${ARCH:-arm}
 
 TMP=${TMP:-/tmp}
